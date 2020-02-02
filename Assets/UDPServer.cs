@@ -13,29 +13,30 @@ public class UDPServer : MonoBehaviour
     private static int localPort;
 
     // prefs
-    private string IP;  // define in init
+    public string IP;  // define in init
     public int port;  // define in init
-    private float timeleft = 1;
+    public List<GameObject> objects;
    
     // "connection" things
     IPEndPoint remoteEndPoint;
     UdpClient client;
-   
-    // gui
-    string strMessage="";
 
     void init()
     {
-        // define
-        IP="127.0.0.1";
-        port=8051;
-       
+        if (String.IsNullOrEmpty(IP))
+        {
+            IP = "127.0.0.1";
+        }
+        if (port == 0)
+        {
+            port = 8051;
+        }
+
         remoteEndPoint = new IPEndPoint(IPAddress.Parse(IP), port);
         client = new UdpClient();
        
         // status
         print("Sending to "+IP+" : "+port);
-        print("Testing: nc -lu "+IP+" : "+port);
     }
 
     // Start is called before the first frame update
@@ -44,18 +45,26 @@ public class UDPServer : MonoBehaviour
         init();
     }
 
+    string encodeObjects()
+    {
+        string objstr = "";
+        foreach (GameObject obj in objects)
+        {
+            var position = obj.transform.position;
+            string posstr = position.x.ToString() + "," + position.y.ToString() + "," + position.z.ToString();
+            var rotation = obj.transform.rotation;
+            string rotstr = rotation.w.ToString() + "," + rotation.x.ToString() + "," + rotation.y.ToString() + "," + rotation.z.ToString();
+            objstr += obj.name + ":" + posstr + ":" + rotstr + "#";
+        }
+        return objstr;
+    }
+
     // Update is called once per frame
     void Update()
     {
-        timeleft -= Time.deltaTime;
-        // print(timeleft);
-        if (timeleft<0)
-        {
-            var timestr = Time.time.ToString("f6");
-            byte[] data = Encoding.UTF8.GetBytes(timestr);
-            client.Send(data, data.Length, remoteEndPoint);
-            print("packet sent at " + timestr);
-            timeleft = 1;
-        }
+        string objstr = encodeObjects();
+        byte[] data = Encoding.UTF8.GetBytes(objstr);
+        client.Send(data, data.Length, remoteEndPoint);
+        print("packet sent:" + objstr);
     }
 }

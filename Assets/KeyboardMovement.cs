@@ -39,8 +39,5 @@ public class KeyboardMovement : MonoBehaviour
 
         //update the position
         transform.position = transform.position + new Vector3(horizontalInput * movementSpeed * Time.deltaTime, 0, verticalInput * movementSpeed * Time.deltaTime);
-
-        //output to log the position change
-        Debug.Log(transform.position);
     }
 }

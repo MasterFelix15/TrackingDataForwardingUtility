@@ -6,16 +6,16 @@ using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 public class UDPServer : MonoBehaviour
 {
-    private static int localPort;
-
     // prefs
     public string IP;  // define in init
     public int port;  // define in init
-    public List<GameObject> objects;
+    public GameObject headset;
+    public GameObject brain;
+    public GameObject tool;
+    private Dictionary<string, GameObject> objects;
    
     // "connection" things
     IPEndPoint remoteEndPoint;
@@ -31,7 +31,10 @@ public class UDPServer : MonoBehaviour
         {
             port = 8051;
         }
-
+        objects = new Dictionary<string, GameObject>();
+        objects.Add("headset", headset);
+        objects.Add("brain", brain);
+        objects.Add("tool", tool);
         remoteEndPoint = new IPEndPoint(IPAddress.Parse(IP), port);
         client = new UdpClient();
        
@@ -48,13 +51,14 @@ public class UDPServer : MonoBehaviour
     string encodeObjects()
     {
         string objstr = "";
-        foreach (GameObject obj in objects)
+        foreach (string name in objects.Keys)
         {
+            GameObject obj = objects[name];
             var position = obj.transform.position;
             string posstr = position.x.ToString() + "," + position.y.ToString() + "," + position.z.ToString();
             var rotation = obj.transform.rotation;
-            string rotstr = rotation.w.ToString() + "," + rotation.x.ToString() + "," + rotation.y.ToString() + "," + rotation.z.ToString();
-            objstr += obj.name + ":" + posstr + ":" + rotstr + "#";
+            string rotstr = rotation.x.ToString() + "," + rotation.y.ToString() + "," + rotation.z.ToString() + "," + rotation.w.ToString();
+            objstr += name + ":" + posstr + ":" + rotstr + "#";
         }
         return objstr;
     }

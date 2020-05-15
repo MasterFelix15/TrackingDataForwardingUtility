@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
- 
+
 using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 public class UDPServer : MonoBehaviour
 {
@@ -15,8 +16,12 @@ public class UDPServer : MonoBehaviour
     public GameObject headset;
     public GameObject brain;
     public GameObject tool;
+    public GameObject headsetdud;
+    public GameObject braindud;
+    public GameObject tooldud;
     private Dictionary<string, GameObject> objects;
-   
+    private Vector3 target = new Vector3(0.0f, 0.0f, 0.0f);
+
     // "connection" things
     IPEndPoint remoteEndPoint;
     UdpClient client;
@@ -32,43 +37,54 @@ public class UDPServer : MonoBehaviour
             port = 8051;
         }
         objects = new Dictionary<string, GameObject>();
-        objects.Add("headset", headset);
         objects.Add("brain", brain);
         objects.Add("tool", tool);
         remoteEndPoint = new IPEndPoint(IPAddress.Parse(IP), port);
         client = new UdpClient();
-       
+
+
         // status
-        print("Sending to "+IP+" : "+port);
+        print("Sending to " + IP + " : " + port);
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        String strHostName = System.Net.Dns.GetHostName();
+        IPHostEntry ipEntry = System.Net.Dns.GetHostEntry(strHostName);
+        var addr = ipEntry.AddressList;
+        print(addr[addr.Length - 1].ToString());
         init();
     }
 
-    string encodeObjects()
+    string encodeObject(GameObject obj, GameObject dud)
     {
-        string objstr = "";
-        foreach (string name in objects.Keys)
-        {
-            GameObject obj = objects[name];
-            var position = obj.transform.position;
-            string posstr = position.x.ToString() + "," + position.y.ToString() + "," + position.z.ToString();
-            var rotation = obj.transform.rotation;
-            string rotstr = rotation.x.ToString() + "," + rotation.y.ToString() + "," + rotation.z.ToString() + "," + rotation.w.ToString();
-            objstr += name + ":" + posstr + ":" + rotstr + "#";
-        }
-        return objstr;
+        var position = obj.transform.position;
+        var rotation = obj.transform.rotation;
+        //var relativePosition = position - headset.transform.position;
+        //var relativeRotation = rotation * Quaternion.Inverse(headset.transform.rotation);
+        //dud.transform.rotation = relativeRotation;
+        //dud.transform.position = relativePosition;
+        //dud.transform.RotateAround(target, Vector3.up, 90);
+        //var offsetPosition = dud.transform.position;
+        //var offsetRotation = dud.transform.rotation;
+
+        dud.transform.position = position;
+        dud.transform.rotation = rotation;
+        var localPosition = dud.transform.localPosition;
+        var localRotation = dud.transform.localRotation;
+        string posstr = localPosition.x.ToString() + "," + localPosition.y.ToString() + "," + localPosition.z.ToString();
+        string rotstr = localRotation.x.ToString() + "," + localRotation.y.ToString() + "," + localRotation.z.ToString() + "," + localRotation.w.ToString();
+        return posstr + ":" + rotstr + "#";
     }
 
     // Update is called once per frame
     void Update()
     {
-        string objstr = encodeObjects();
+        encodeObject(headset, headsetdud);
+        string objstr = encodeObject(tool, tooldud) + encodeObject(brain, braindud);
         byte[] data = Encoding.UTF8.GetBytes(objstr);
         client.Send(data, data.Length, remoteEndPoint);
-        print("packet sent:" + objstr);
+        // print("packet sent:" + objstr);
     }
 }

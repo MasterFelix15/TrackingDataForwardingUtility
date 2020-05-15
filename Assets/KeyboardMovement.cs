@@ -22,19 +22,19 @@ public class KeyboardMovement : MonoBehaviour
 
         if (Input.GetKey(KeyCode.W))
         {
-            horizontalInput += 1;
+            verticalInput += 1;
         }
         if (Input.GetKey(KeyCode.S))
         {
-            horizontalInput -= 1;
+            verticalInput -= 1;
         }
         if (Input.GetKey(KeyCode.A))
         {
-            verticalInput += 1;
+            horizontalInput -= 1;
         }
         if (Input.GetKey(KeyCode.D))
         {
-            verticalInput -= 1;
+            horizontalInput += 1;
         }
 
         //update the position
